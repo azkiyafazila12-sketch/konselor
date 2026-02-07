@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TopOne Care - Konselor</title>
+<style>
+body { margin:0; font-family:'Segoe UI',sans-serif; background: linear-gradient(135deg, #ff8fb1, #7ecbff); min-height:100vh; color:#333;}
+header { background: rgba(255,255,255,0.9); padding:15px; text-align:center; font-weight:bold; font-size:22px;}
+.container{padding:15px;}
+.card{background:white; border-radius:15px; padding:15px; margin-bottom:15px; box-shadow:0 5px 15px rgba(0,0,0,0.1);}
+button{background:linear-gradient(135deg,#ff6fa1,#5ab9ff); border:none; padding:12px; width:100%; border-radius:10px; color:white; font-size:16px; cursor:pointer; transition:0.3s;}
+button:hover{transform:scale(1.03);}
+textarea,input{width:100%; padding:10px; border-radius:10px; border:1px solid #ccc; margin-top:8px; resize:none; overflow:hidden;}
+.notif{color:red; font-weight:bold; animation: blink 1s infinite;}
+@keyframes blink{50%{opacity:0;}}
+.hidden{display:none;}
+.history{background:#f0f0f0; padding:8px; border-radius:10px; margin-top:5px;}
+</style>
+</head>
+<body>
+
+<header>TopOne Care 💙💗 - Konselor</header>
+
+<div class="container">
+
+<!-- Login Konselor -->
+<div id="loginKonselor" class="card">
+<h3>Login Konselor</h3>
+<input type="password" id="password" placeholder="Masukkan password">
+<button onclick="login()">Masuk</button>
+</div>
+
+<!-- Panel Konselor -->
+<div id="panelKonselor" class="hidden">
+
+<!-- Pesan Masuk -->
+<div class="card">
+<h3>Pesan Masuk</h3>
+<div id="pesanMasuk"></div>
+</div>
+
+</div>
+</div>
+
+<script>
+const COUNSELOR_PASSWORD = "pikrtopone";
+
+// Login
+function login(){
+    const pw = document.getElementById("password").value;
+    if(pw === COUNSELOR_PASSWORD){
+        loginKonselor.classList.add("hidden");
+        panelKonselor.classList.remove("hidden");
+        loadKonselor();
+    } else {
+        alert("Password salah 🤍");
+    }
+}
+
+// Load pesan masuk
+function loadKonselor(){
+    let box = document.getElementById("pesanMasuk");
+    let data = JSON.parse(localStorage.getItem("curhat")||"[]");
+    box.innerHTML="";
+    let now = Date.now();
+
+    // Hapus pesan > 1 minggu
+    data = data.filter(d=> now - d.waktu < 7*24*60*60*1000 );
+    localStorage.setItem("curhat",JSON.stringify(data));
+
+    let notifCount=0;
+    data.forEach(d=>{
+        let pesanHTML = `<p><strong>${d.pesan}</strong></p>`;
+        if(d.jawaban){
+            pesanHTML += `<div class="history">Balasan: ${d.jawaban}</div>`;
+        } else {
+            notifCount++;
+            pesanHTML += `<textarea id="j${d.id}" placeholder="Balas..." oninput="autoGrow(this)"></textarea>
+            <button onclick="balas(${d.id})">Kirim Balasan</button>`;
+        }
+        box.innerHTML += `<div class="card">${pesanHTML}</div>`;
+    });
+
+    if(notifCount>0) box.innerHTML=`<p class="notif">Ada ${notifCount} curhat baru!</p>` + box.innerHTML;
+}
+
+// Auto grow textarea
+function autoGrow(el){
+    el.style.height = "5px";
+    el.style.height = (el.scrollHeight)+"px";
+}
+
+// Balas pesan
+function balas(id){
+    let data = JSON.parse(localStorage.getItem("curhat")||"[]");
+    let jawab = document.getElementById("j"+id).value.trim();
+    if(!jawab) return alert("Isi balasan dulu 🤍");
+    data.forEach(d=>{ if(d.id==id) d.jawaban=jawab; });
+    localStorage.setItem("curhat",JSON.stringify(data));
+    loadKonselor();
+}
+
+// Auto refresh pesan setiap 5 detik
+setInterval(()=>{ if(!panelKonselor.classList.contains("hidden")) loadKonselor(); },5000);
+</script>
+
+</body>
+</html>
